@@ -1,5 +1,5 @@
 from django.urls import path, include
 
 urlpatterns = [
-    # Placeholders for sub-module routing
+    path('auth/', include('apps.accounts.urls')),
 ]
