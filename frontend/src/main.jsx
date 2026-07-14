@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import MarkAttendance from './pages/MarkAttendance'
 import LeaveManagement from './pages/LeaveManagement'
+import Analytics from './pages/Analytics'
 import Unauthorized from './pages/Unauthorized'
 import NotFound from './pages/NotFound'
 import DummyPlaceholder from './pages/DummyPlaceholder'
@@ -43,6 +44,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="/courses" element={<DummyPlaceholder />} />
               <Route path="/attendance" element={<MarkAttendance />} />
               <Route path="/leaves" element={<LeaveManagement />} />
+              <Route path="/analytics" element={<Analytics />} />
             </Route>
           </Route>
 

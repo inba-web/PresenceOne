@@ -6,6 +6,8 @@ from .views import (
     AttendanceSessionViewSet,
     BulkAttendanceMarkView,
     StudentAttendanceSummaryView,
+    ExportAttendanceCSVView,
+    AttendanceAnalyticsView,
 )
 
 router = DefaultRouter()
@@ -17,4 +19,6 @@ urlpatterns = [
     path('faculty/students/', FacultyStudentsListView.as_view(), name='faculty-students'),
     path('sessions/<int:session_id>/bulk-mark/', BulkAttendanceMarkView.as_view(), name='bulk-mark-attendance'),
     path('student/summary/', StudentAttendanceSummaryView.as_view(), name='student-attendance-summary'),
+    path('export/csv/', ExportAttendanceCSVView.as_view(), name='export-attendance-csv'),
+    path('analytics/summary/', AttendanceAnalyticsView.as_view(), name='attendance-analytics-summary'),
 ]

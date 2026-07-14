@@ -176,3 +176,139 @@ class StudentAttendanceSummaryView(generics.GenericAPIView):
             "subjects": subject_stats,
             "recent": recent_logs
         }, status=status.HTTP_200_OK)
+
+
+import csv
+from django.http import HttpResponse
+
+class ExportAttendanceCSVView(generics.GenericAPIView):
+    """
+    Export attendance matrix for a subject to CSV format.
+    - Columns: Roll Number, Name, Class Session Dates
+    - Rows: Individual students and their status characters (P/A/L/E)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if user.role not in ['FACULTY', 'ADMIN', 'SUPER_ADMIN']:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        subject_id = request.query_params.get('subject_id')
+        if not subject_id:
+            return Response({"detail": "subject_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            subject = Subject.objects.get(pk=subject_id)
+        except Subject.DoesNotExist:
+            return Response({"detail": "Subject not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get all sessions for this subject
+        sessions = AttendanceSession.objects.filter(subject=subject).order_by('date', 'start_time')
+        # Get all students enrolled
+        students = StudentProfile.objects.filter(course=subject.course, current_semester=subject.semester).order_by('roll_number')
+
+        # Initialize CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="attendance_{subject.code}.csv"'
+
+        writer = csv.writer(response)
+
+        # Build Headers
+        headers = ['Roll Number', 'Student Name']
+        for sess in sessions:
+            headers.append(f"{sess.date} {sess.start_time.strftime('%H:%M')}")
+        writer.writerow(headers)
+
+        # Build Rows
+        for std in students:
+            row = [std.roll_number, std.user.get_full_name()]
+            for sess in sessions:
+                rec = AttendanceRecord.objects.filter(student=std, session=sess).first()
+                if rec:
+                    status_map = {'PRESENT': 'P', 'ABSENT': 'A', 'LATE': 'L', 'EXCUSED': 'E'}
+                    row.append(status_map.get(rec.status, '-'))
+                else:
+                    row.append('-')
+            writer.writerow(row)
+
+        return response
+
+
+class AttendanceAnalyticsView(generics.GenericAPIView):
+    """
+    Retrieves aggregated summary statistics for dashboard charts (pie share, line trends, subject comparisons).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        
+        # Filter records based on role
+        if user.role == 'STUDENT':
+            try:
+                student_profile = user.student_profile
+                records = AttendanceRecord.objects.filter(student=student_profile)
+            except AttributeError:
+                return Response({"detail": "Student profile not found."}, status=status.HTTP_400_BAD_REQUEST)
+        elif user.role == 'FACULTY':
+            try:
+                faculty_profile = user.faculty_profile
+                records = AttendanceRecord.objects.filter(session__faculty=faculty_profile)
+            except AttributeError:
+                return Response({"detail": "Faculty profile not found."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            records = AttendanceRecord.objects.all()
+
+        # 1. Status Distribution
+        total = records.count()
+        present_count = records.filter(status='PRESENT').count()
+        absent_count = records.filter(status='ABSENT').count()
+        late_count = records.filter(status='LATE').count()
+        excused_count = records.filter(status='EXCUSED').count()
+
+        status_distribution = [
+            {"name": "Present", "value": present_count},
+            {"name": "Absent", "value": absent_count},
+            {"name": "Late", "value": late_count},
+            {"name": "Excused", "value": excused_count},
+        ]
+
+        # 2. Subject Averages
+        subject_ids = records.values_list('session__subject_id', flat=True).distinct()
+        subjects = Subject.objects.filter(id__in=subject_ids)
+        
+        subject_averages = []
+        for sub in subjects:
+            sub_records = records.filter(session__subject=sub)
+            sub_total = sub_records.count()
+            sub_present = sub_records.filter(status__in=['PRESENT', 'LATE']).count()
+            sub_pct = (sub_present / sub_total * 100) if sub_total > 0 else 100.0
+            subject_averages.append({
+                "subject_name": sub.name,
+                "subject_code": sub.code,
+                "percentage": round(sub_pct, 1)
+            })
+
+        # 3. Daily trends (past 7 distinct session dates with records)
+        session_dates = records.values_list('session__date', flat=True).distinct().order_by('-session__date')[:7]
+        session_dates = sorted(list(session_dates))
+        
+        daily_trends = []
+        for d in session_dates:
+            day_records = records.filter(session__date=d)
+            day_total = day_records.count()
+            day_present = day_records.filter(status__in=['PRESENT', 'LATE']).count()
+            day_pct = (day_present / day_total * 100) if day_total > 0 else 100.0
+            daily_trends.append({
+                "date": str(d),
+                "percentage": round(day_pct, 1)
+            })
+
+        return Response({
+            "total_records": total,
+            "status_distribution": status_distribution,
+            "subject_averages": subject_averages,
+            "daily_trends": daily_trends
+        }, status=status.HTTP_200_OK)
+

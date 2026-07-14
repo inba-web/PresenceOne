@@ -25,6 +25,18 @@ export const attendanceService = {
     const response = await api.get('attendance/student/summary/')
     return response.data
   },
+
+  getAnalyticsSummary: async () => {
+    const response = await api.get('attendance/analytics/summary/')
+    return response.data
+  },
+
+  exportAttendanceCSV: async (subjectId) => {
+    const response = await api.get(`attendance/export/csv/?subject_id=${subjectId}`, {
+      responseType: 'blob'
+    })
+    return response.data
+  },
 }
 
 export default attendanceService

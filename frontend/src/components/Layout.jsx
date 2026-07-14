@@ -17,7 +17,8 @@ import {
   Moon,
   ChevronDown,
   Activity,
-  Bell
+  Bell,
+  BarChart2
 } from 'lucide-react'
 import { logout } from '../store/slices/authSlice'
 import { toast } from 'react-hot-toast'
@@ -66,6 +67,7 @@ export default function Layout() {
     { name: 'Courses', path: '/courses', icon: BookOpen, role: ['SUPER_ADMIN', 'ADMIN'] },
     { name: 'Attendance', path: '/attendance', icon: CalendarDays },
     { name: 'Leave Requests', path: '/leaves', icon: FileSpreadsheet },
+    { name: 'Analytics', path: '/analytics', icon: BarChart2 },
     { name: 'Profile Settings', path: '/profile', icon: SettingsIcon },
   ]
 
