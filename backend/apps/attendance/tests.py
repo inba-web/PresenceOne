@@ -1,4 +1,4 @@
-from django.test import TestCase
+from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
 from datetime import date, time
 from apps.departments.models import Department
@@ -10,7 +10,7 @@ from apps.attendance.models import AttendanceSession, AttendanceRecord
 
 User = get_user_model()
 
-class AttendanceTests(TestCase):
+class AttendanceTests(APITestCase):
     def setUp(self):
         self.dept = Department.objects.create(name="CS", code="CS")
         self.course = Course.objects.create(name="BTech CS", code="BTECH_CS", department=self.dept)
@@ -74,3 +74,77 @@ class AttendanceTests(TestCase):
                 session=session,
                 status="ABSENT"
             )
+
+    def test_faculty_subjects_list_api(self):
+        from django.urls import reverse
+        self.client.force_authenticate(user=self.fac_user)
+        url = reverse('faculty-subjects')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['code'], "CS101")
+
+    def test_faculty_students_list_api(self):
+        from django.urls import reverse
+        self.client.force_authenticate(user=self.fac_user)
+        url = reverse('faculty-students') + f"?subject_id={self.subject.id}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['roll_number'], "STU001")
+
+    def test_bulk_attendance_mark_api(self):
+        from django.urls import reverse
+        self.client.force_authenticate(user=self.fac_user)
+        
+        session = AttendanceSession.objects.create(
+            subject=self.subject,
+            faculty=self.fac_profile,
+            date=date.today(),
+            start_time=time(9, 0),
+            end_time=time(10, 0)
+        )
+        
+        url = reverse('bulk-mark-attendance', kwargs={"session_id": session.id})
+        data = {
+            "records": [
+                {
+                    "student_id": self.stud_profile.id,
+                    "status": "PRESENT",
+                    "remarks": "On time"
+                }
+            ]
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify the record was created
+        record = AttendanceRecord.objects.get(student=self.stud_profile, session=session)
+        self.assertEqual(record.status, "PRESENT")
+        self.assertEqual(record.remarks, "On time")
+
+    def test_student_attendance_summary_api(self):
+        from django.urls import reverse
+        # Create some attendance session and record
+        session = AttendanceSession.objects.create(
+            subject=self.subject,
+            faculty=self.fac_profile,
+            date=date.today(),
+            start_time=time(9, 0),
+            end_time=time(10, 0)
+        )
+        AttendanceRecord.objects.create(
+            student=self.stud_profile,
+            session=session,
+            status="PRESENT",
+            marked_by=self.fac_user
+        )
+        
+        self.client.force_authenticate(user=self.stud_user)
+        url = reverse('student-attendance-summary')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('overall', response.data)
+        self.assertEqual(response.data['overall']['total_sessions'], 1)
+        self.assertEqual(response.data['overall']['percentage'], 100.0)
+
