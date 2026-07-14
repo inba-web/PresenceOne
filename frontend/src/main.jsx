@@ -9,6 +9,7 @@ import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
+import MarkAttendance from './pages/MarkAttendance'
 import Unauthorized from './pages/Unauthorized'
 import NotFound from './pages/NotFound'
 import DummyPlaceholder from './pages/DummyPlaceholder'
@@ -39,7 +40,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="/faculty" element={<DummyPlaceholder />} />
               <Route path="/departments" element={<DummyPlaceholder />} />
               <Route path="/courses" element={<DummyPlaceholder />} />
-              <Route path="/attendance" element={<DummyPlaceholder />} />
+              <Route path="/attendance" element={<MarkAttendance />} />
               <Route path="/leaves" element={<DummyPlaceholder />} />
             </Route>
           </Route>
