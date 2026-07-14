@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, Link } from 'react-router-dom'
-import { LogOut, User, LayoutDashboard, Shield, Activity, Calendar, Award, AlertTriangle, BookOpen, Clock, PlusCircle } from 'lucide-react'
+import { LogOut, User, LayoutDashboard, Shield, Activity, Calendar, Award, AlertTriangle, BookOpen, Clock, PlusCircle, CheckCircle, ShieldAlert } from 'lucide-react'
 import { logout } from '../store/slices/authSlice'
 import { toast } from 'react-hot-toast'
 import attendanceService from '../services/attendanceService'
