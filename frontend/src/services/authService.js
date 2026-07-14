@@ -30,6 +30,11 @@ export const authService = {
     const response = await api.post('auth/reset-password/', emailData)
     return response.data
   },
+
+  resetPasswordConfirm: async (resetData) => {
+    const response = await api.post('auth/reset-password/confirm/', resetData)
+    return response.data
+  },
 }
 
 export default authService

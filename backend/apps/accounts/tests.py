@@ -106,3 +106,46 @@ class AccountsAuthTests(APITestCase):
         }
         response = self.client.post(self.register_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_password_reset_confirm_success(self):
+        from django.utils.http import urlsafe_base64_encode
+        from django.utils.encoding import force_bytes
+        from django.contrib.auth.tokens import default_token_generator
+        
+        uid = urlsafe_base64_encode(force_bytes(self.student_user.pk))
+        token = default_token_generator.make_token(self.student_user)
+        reset_confirm_url = reverse('reset_password_confirm')
+        
+        data = {
+            "uidb64": uid,
+            "token": token,
+            "new_password": "brand_new_secure_pass_123"
+        }
+        response = self.client.post(reset_confirm_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Verify student can login with the new password
+        login_response = self.client.post(self.login_url, {
+            "email": "student@presencone.com",
+            "password": "brand_new_secure_pass_123"
+        }, format='json')
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+
+    def test_role_required_permission_helper(self):
+        from apps.accounts.permissions import RoleRequired
+        
+        # Test class factory
+        permission_class = RoleRequired(['ADMIN', 'FACULTY'])
+        permission_instance = permission_class()
+        
+        # Simulate request mapping
+        class DummyRequest:
+            def __init__(self, user):
+                self.user = user
+                
+        req_student = DummyRequest(self.student_user)
+        req_faculty = DummyRequest(self.faculty_user)
+        
+        self.assertFalse(permission_instance.has_permission(req_student, None))
+        self.assertTrue(permission_instance.has_permission(req_faculty, None))
+

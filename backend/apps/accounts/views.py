@@ -9,6 +9,7 @@ from .serializers import (
     UserProfileSerializer,
     PasswordChangeSerializer,
     PasswordResetRequestSerializer,
+    PasswordResetSerializer,
 )
 from .permissions import IsAdmin
 
@@ -91,3 +92,21 @@ class PasswordResetRequestView(generics.GenericAPIView):
             print(f"PASSWORD_RESET_DEBUG: Dispatching link request to Celery for email: {email}")
             return Response({"detail": "If the email exists, a password reset link has been sent."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordResetConfirmView(generics.GenericAPIView):
+    """
+    Confirm password reset using uidb64 and token.
+    """
+    serializer_class = PasswordResetSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.context['user']
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

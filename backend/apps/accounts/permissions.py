@@ -41,3 +41,31 @@ class IsStudent(permissions.BasePermission):
 class IsParent(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.role == 'PARENT'
+
+
+from functools import wraps
+from django.core.exceptions import PermissionDenied
+
+def role_required(roles):
+    """
+    Decorator for function-based views to enforce role-based access.
+    """
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if not request.user or not request.user.is_authenticated or request.user.role not in roles:
+                raise PermissionDenied("You do not have permission to access this resource.")
+            return view_func(request, *args, **kwargs)
+        return _wrapped_view
+    return decorator
+
+
+def RoleRequired(roles):
+    """
+    Class factory for DRF class-based views.
+    """
+    class DynamicRolePermission(permissions.BasePermission):
+        def has_permission(self, request, view):
+            return request.user and request.user.is_authenticated and request.user.role in roles
+    return DynamicRolePermission
+
