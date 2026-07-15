@@ -110,3 +110,34 @@ class PasswordResetConfirmView(generics.GenericAPIView):
             return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class StudentSignupView(generics.CreateAPIView):
+    """
+    Public student signup endpoint.
+    """
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request, *args, **kwargs):
+        from .serializers import StudentSignupSerializer
+        serializer = StudentSignupSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Student registered successfully. You can now login."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FacultySignupView(generics.CreateAPIView):
+    """
+    Public faculty signup endpoint.
+    """
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request, *args, **kwargs):
+        from .serializers import FacultySignupSerializer
+        serializer = FacultySignupSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Faculty registered successfully. You can now login."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+

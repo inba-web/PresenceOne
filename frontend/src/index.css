@@ -4,6 +4,59 @@
 
 @layer base {
   body {
-    @apply bg-bg-light text-slate-900 dark:bg-bg-dark dark:text-slate-100 transition-colors duration-200;
+    @apply bg-bg-light text-slate-900 dark:bg-bg-dark dark:text-slate-100 font-sans antialiased transition-colors duration-200;
+  }
+
+  /* Custom Modern Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-800 rounded-full hover:bg-slate-400 dark:hover:bg-slate-700 transition-colors;
   }
 }
+
+@layer utilities {
+  /* Premium radial grid backgrounds */
+  .bg-grid-pattern {
+    background-size: 20px 20px;
+    background-image: radial-gradient(circle, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  }
+  .dark .bg-grid-pattern {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+
+  /* Glassmorphism template */
+  .bg-glass {
+    @apply bg-white/70 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/80;
+  }
+
+  /* Smooth custom shadows */
+  .shadow-premium-hover {
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+  }
+  .dark .shadow-premium-hover {
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
