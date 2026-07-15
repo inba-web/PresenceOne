@@ -59,12 +59,12 @@ services:
       - key: CELERY_BROKER_URL
         fromService:
           name: presencone-redis
-          type: pserv
+          type: redis
           property: connectionString
       - key: CELERY_RESULT_BACKEND
         fromService:
           name: presencone-redis
-          type: pserv
+          type: redis
           property: connectionString
       - key: CORS_ALLOWED_ORIGINS
         value: "https://presencone-frontend.onrender.com"
