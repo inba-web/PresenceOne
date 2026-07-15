@@ -24,6 +24,8 @@ services:
     startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
     plan: free
     envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
@@ -57,12 +59,12 @@ services:
       - key: CELERY_BROKER_URL
         fromService:
           name: presencone-redis
-          type: redis
+          type: pserv
           property: connectionString
       - key: CELERY_RESULT_BACKEND
         fromService:
           name: presencone-redis
-          type: redis
+          type: pserv
           property: connectionString
       - key: CORS_ALLOWED_ORIGINS
         value: "https://presencone-frontend.onrender.com"
@@ -132,5 +134,7 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      - key: NODE_VERSION
+        value: "20"
       - key: VITE_API_URL
         value: "https://presencone-backend.onrender.com/api/v1/"
