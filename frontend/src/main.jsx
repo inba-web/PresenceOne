@@ -7,9 +7,12 @@ import store from './store'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
+import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import MarkAttendance from './pages/MarkAttendance'
+import LeaveManagement from './pages/LeaveManagement'
+import Analytics from './pages/Analytics'
 import Unauthorized from './pages/Unauthorized'
 import NotFound from './pages/NotFound'
 import DummyPlaceholder from './pages/DummyPlaceholder'
@@ -20,12 +23,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>
       <Toaster position="top-right" reverseOrder={false} />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           {/* Public Authentication Routes */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/register" element={<Register />} />
           </Route>
 
           {/* Secure Authenticated Routes */}
@@ -41,7 +45,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="/departments" element={<DummyPlaceholder />} />
               <Route path="/courses" element={<DummyPlaceholder />} />
               <Route path="/attendance" element={<MarkAttendance />} />
-              <Route path="/leaves" element={<DummyPlaceholder />} />
+              <Route path="/leaves" element={<LeaveManagement />} />
+              <Route path="/analytics" element={<Analytics />} />
             </Route>
           </Route>
 

@@ -97,3 +97,114 @@ class PasswordResetSerializer(serializers.Serializer):
         self.context['user'] = user
         return attrs
 
+
+class StudentSignupSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    phone = serializers.CharField(required=False, allow_blank=True, default='')
+    
+    roll_number = serializers.CharField()
+    admission_number = serializers.CharField()
+    department = serializers.IntegerField(required=False, allow_null=True)
+    course = serializers.IntegerField(required=False, allow_null=True)
+    current_semester = serializers.IntegerField(required=False, default=1)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def create(self, validated_data):
+        from django.db import transaction
+        from apps.students.models import StudentProfile
+        from apps.departments.models import Department
+        from apps.courses.models import Course
+
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=validated_data['email'],
+                password=validated_data['password'],
+                role='STUDENT',
+                first_name=validated_data['first_name'],
+                last_name=validated_data['last_name'],
+                phone=validated_data.get('phone', ''),
+            )
+            
+            dept = None
+            if validated_data.get('department'):
+                try:
+                    dept = Department.objects.get(pk=validated_data['department'])
+                except Department.DoesNotExist:
+                    pass
+
+            course = None
+            if validated_data.get('course'):
+                try:
+                    course = Course.objects.get(pk=validated_data['course'])
+                except Course.DoesNotExist:
+                    pass
+
+            StudentProfile.objects.create(
+                user=user,
+                roll_number=validated_data['roll_number'],
+                admission_number=validated_data['admission_number'],
+                department=dept,
+                course=course,
+                current_semester=validated_data.get('current_semester', 1),
+                date_of_birth=validated_data.get('date_of_birth'),
+            )
+            return user
+
+
+class FacultySignupSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    phone = serializers.CharField(required=False, allow_blank=True, default='')
+    
+    employee_id = serializers.CharField()
+    designation = serializers.CharField(required=False, allow_blank=True, default='')
+    department = serializers.IntegerField(required=False, allow_null=True)
+    joining_date = serializers.DateField(required=False, allow_null=True)
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def create(self, validated_data):
+        from django.db import transaction
+        from apps.faculty.models import FacultyProfile
+        from apps.departments.models import Department
+
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=validated_data['email'],
+                password=validated_data['password'],
+                role='FACULTY',
+                first_name=validated_data['first_name'],
+                last_name=validated_data['last_name'],
+                phone=validated_data.get('phone', ''),
+            )
+            
+            dept = None
+            if validated_data.get('department'):
+                try:
+                    dept = Department.objects.get(pk=validated_data['department'])
+                except Department.DoesNotExist:
+                    pass
+
+            FacultyProfile.objects.create(
+                user=user,
+                employee_id=validated_data['employee_id'],
+                designation=validated_data.get('designation', ''),
+                department=dept,
+                joining_date=validated_data.get('joining_date'),
+            )
+            return user
+
+

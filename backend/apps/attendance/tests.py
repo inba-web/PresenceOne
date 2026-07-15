@@ -148,3 +148,58 @@ class AttendanceTests(APITestCase):
         self.assertEqual(response.data['overall']['total_sessions'], 1)
         self.assertEqual(response.data['overall']['percentage'], 100.0)
 
+    def test_export_attendance_csv_api(self):
+        from django.urls import reverse
+        # Create some sessions and records
+        session = AttendanceSession.objects.create(
+            subject=self.subject,
+            faculty=self.fac_profile,
+            date=date.today(),
+            start_time=time(9, 0),
+            end_time=time(10, 0)
+        )
+        AttendanceRecord.objects.create(
+            student=self.stud_profile,
+            session=session,
+            status="PRESENT",
+            marked_by=self.fac_user
+        )
+
+        self.client.force_authenticate(user=self.fac_user)
+        url = reverse('export-attendance-csv') + f"?subject_id={self.subject.id}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv')
+        self.assertIn('attachment; filename=', response['Content-Disposition'])
+        
+        # Verify content
+        content = response.content.decode('utf-8')
+        self.assertIn('Roll Number,Student Name', content)
+        self.assertIn(self.stud_profile.roll_number, content)
+
+    def test_attendance_analytics_summary_api(self):
+        from django.urls import reverse
+        session = AttendanceSession.objects.create(
+            subject=self.subject,
+            faculty=self.fac_profile,
+            date=date.today(),
+            start_time=time(9, 0),
+            end_time=time(10, 0)
+        )
+        AttendanceRecord.objects.create(
+            student=self.stud_profile,
+            session=session,
+            status="PRESENT",
+            marked_by=self.fac_user
+        )
+
+        self.client.force_authenticate(user=self.fac_user)
+        url = reverse('attendance-analytics-summary')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('status_distribution', response.data)
+        self.assertIn('subject_averages', response.data)
+        self.assertIn('daily_trends', response.data)
+        self.assertEqual(response.data['total_records'], 1)
+
+

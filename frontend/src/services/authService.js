@@ -35,6 +35,27 @@ export const authService = {
     const response = await api.post('auth/reset-password/confirm/', resetData)
     return response.data
   },
+
+  registerStudent: async (studentData) => {
+    const response = await api.post('auth/register/student/', studentData)
+    return response.data
+  },
+
+  registerFaculty: async (facultyData) => {
+    const response = await api.post('auth/register/faculty/', facultyData)
+    return response.data
+  },
+
+  getDepartments: async () => {
+    const response = await api.get('departments/')
+    return response.data
+  },
+
+  getCourses: async (departmentId = '') => {
+    const url = departmentId ? `courses/?department_id=${departmentId}` : 'courses/'
+    const response = await api.get(url)
+    return response.data
+  },
 }
 
 export default authService
